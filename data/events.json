@@ -1,0 +1,23 @@
+[
+  {
+    "title": "Special Weekend!",
+    "event_date": "2017-07-01",
+    "venue": "舞浜アンフィシアター",
+    "setlist": [
+      {
+        "order_no": 1,
+        "performers": [
+          "スペシャルウィーク",
+          "サイレンススズカ",
+          "トウカイテイオー"
+        ]
+      },
+      {
+        "order_no": 2,
+        "performers": [
+          "トウカイテイオー"
+        ]
+      }
+    ]
+  }
+]
