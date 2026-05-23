@@ -6,6 +6,7 @@
     "setlist": [
       {
         "order_no": 1,
+        "song_name": "Fanfare to Future",
         "performers": [
           "スペシャルウィーク",
           "サイレンススズカ",
@@ -14,6 +15,7 @@
       },
       {
         "order_no": 2,
+        "song_name": "恋はダービー",
         "performers": [
           "トウカイテイオー"
         ]

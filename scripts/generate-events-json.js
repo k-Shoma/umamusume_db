@@ -38,8 +38,8 @@ async function main() {
     .select("*")
     .order("event_date", { ascending: false })
     .order("event_db_id", { ascending: true })
-    .order("order_no", { ascending: true });
-
+    .order("order_no", { ascending: true })
+    .order("song_name", { ascending: true });
   if (error) {
     throw error;
   }
@@ -63,7 +63,7 @@ async function main() {
 
     event.setlist.push({
       order_no: row.order_no,
-      song_title: row.song_title,
+      song_name: row.song_name,
       performers: normalizePerformers(row.performers)
     });
   }
