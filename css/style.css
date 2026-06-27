@@ -225,3 +225,180 @@ main {
 .detail-link a:hover {
   text-decoration: underline;
 }
+
+/* archive.html イベントカード */
+.archive-year-section {
+  margin-bottom: 36px;
+}
+
+.archive-year-heading {
+  margin: 0 0 16px;
+  padding-left: 12px;
+  border-left: 6px solid #7ac943;
+  font-size: 24px;
+}
+
+.event-card__badges {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.event-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: #7ac943;
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.event-badge--sub {
+  background: #eef9e8;
+  color: #3f8f2f;
+}
+
+.event-card__action {
+  margin-top: 12px;
+  color: #3f8f2f;
+  font-weight: 700;
+}
+
+/* event.html */
+.event-detail {
+  background: #ffffff;
+  border: 1px solid #d8e8d1;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.05);
+}
+
+.event-detail__header {
+  margin-bottom: 28px;
+}
+
+.event-detail__labels {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.event-detail__header h2 {
+  margin: 0 0 16px;
+  font-size: 28px;
+  line-height: 1.4;
+}
+
+.event-info {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 16px;
+  background: #f8fbf6;
+  border: 1px solid #d8e8d1;
+  border-radius: 14px;
+}
+
+.event-info div {
+  display: grid;
+  grid-template-columns: 88px 1fr;
+  gap: 12px;
+}
+
+.event-info dt {
+  color: #3f8f2f;
+  font-weight: 700;
+}
+
+.event-info dd {
+  margin: 0;
+  color: #333333;
+}
+
+.setlist-table-wrap {
+  overflow-x: auto;
+  border-radius: 14px;
+  border: 1px solid #d8e8d1;
+}
+
+.setlist-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  background: #ffffff;
+}
+
+.setlist-table th,
+.setlist-table td {
+  padding: 12px 14px;
+  border-bottom: 1px solid #d8e8d1;
+  text-align: left;
+  vertical-align: top;
+}
+
+.setlist-table th {
+  background: #eef9e8;
+  color: #2f6f26;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.setlist-table tbody tr:hover {
+  background: #f8fbf6;
+}
+
+.setlist-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.setlist-table__order {
+  width: 72px;
+  text-align: center;
+  font-weight: 700;
+  color: #3f8f2f;
+}
+
+.setlist-table__block {
+  width: 120px;
+  color: #666666;
+  white-space: nowrap;
+}
+
+.setlist-table__song {
+  min-width: 220px;
+  font-weight: 700;
+}
+
+.setlist-table__performers {
+  color: #555555;
+}
+
+@media (max-width: 640px) {
+  .event-detail {
+    padding: 18px;
+    border-radius: 14px;
+  }
+
+  .event-detail__header h2 {
+    font-size: 22px;
+  }
+
+  .event-info {
+    padding: 14px;
+  }
+
+  .event-info div {
+    grid-template-columns: 1fr;
+    gap: 2px;
+  }
+
+  .setlist-table th,
+  .setlist-table td {
+    padding: 10px 12px;
+    font-size: 14px;
+  }
+}

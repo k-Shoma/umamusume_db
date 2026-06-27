@@ -44,12 +44,29 @@ function renderSetlistTable(event) {
   return `
     <article class="event-detail">
       <header class="event-detail__header">
+        <div class="event-detail__labels">
+          ${event.day_label ? `<span class="event-badge">${escapeHtml(event.day_label)}</span>` : ""}
+          ${event.is_numbered ? `<span class="event-badge event-badge--sub">ナンバリング</span>` : ""}
+        </div>
+
         <h2>${escapeHtml(event.title)}</h2>
-        <p class="event-meta">
-          ${escapeHtml(event.day_label ?? "")}
-          ${escapeHtml(event.event_date ?? "")}
-          / ${escapeHtml(event.venue ?? "")}
-        </p>
+
+        <dl class="event-info">
+          <div>
+            <dt>開催日</dt>
+            <dd>${escapeHtml(event.event_date ?? "")}</dd>
+          </div>
+          <div>
+            <dt>会場</dt>
+            <dd>${escapeHtml(event.venue ?? "")}</dd>
+          </div>
+          <div>
+            <dt>開催地</dt>
+            <dd>
+              ${escapeHtml([event.prefecture, event.city].filter(Boolean).join(" "))}
+            </dd>
+          </div>
+        </dl>
       </header>
 
       <section class="section">
@@ -74,10 +91,14 @@ function renderSetlistTable(event) {
 
                   return `
                     <tr>
-                      <td>${escapeHtml(item.order_no)}</td>
-                      <td>${escapeHtml(item.block_name ?? "")}</td>
-                      <td>${escapeHtml(item.song_name)}</td>
-                      <td>${performers}</td>
+                      <td class="setlist-table__order">${escapeHtml(item.order_no)}</td>
+                      <td class="setlist-table__block">${escapeHtml(item.block_name || "-")}</td>
+                      <td class="setlist-table__song">
+                        ${escapeHtml(item.song_name || "-")}
+                      </td>
+                      <td class="setlist-table__performers">
+                        ${performers || "-"}
+                      </td>
                     </tr>
                   `;
                 })

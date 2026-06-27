@@ -7,19 +7,84 @@ function escapeHtml(value) {
     .replaceAll("'", "&#039;");
 }
 
-function formatEventLabel(event, index) {
-  const title = event.title ?? "";
+function groupEventsByGroupId(events) {
+  const groupMap = new Map();
 
-  if (title.toUpperCase().includes("DAY1")) return "DAY1";
-  if (title.toUpperCase().includes("DAY2")) return "DAY2";
+  for (const event of events) {
+    const groupId = event.event_group_id || event.event_id;
 
-  if (event.event_id?.toLowerCase().includes("day1")) return "DAY1";
-  if (event.event_id?.toLowerCase().includes("day2")) return "DAY2";
+    if (!groupMap.has(groupId)) {
+      groupMap.set(groupId, []);
+    }
 
-  if (event.event_id?.endsWith("_1")) return "DAY1";
-  if (event.event_id?.endsWith("_2")) return "DAY2";
+    groupMap.get(groupId).push(event);
+  }
 
-  return `EVENT ${index + 1}`;
+  return Array.from(groupMap.entries()).map(([eventGroupId, groupEvents]) => {
+    const sortedEvents = sortPerformances(groupEvents);
+    const firstEvent = sortedEvents[0];
+    const lastEvent = sortedEvents[sortedEvents.length - 1];
+
+    return {
+      event_group_id: eventGroupId,
+      title: firstEvent.title,
+      first_date: firstEvent.event_date,
+      last_date: lastEvent.event_date,
+      events: sortedEvents
+    };
+  });
+}
+
+function sortPerformances(events) {
+  return [...events].sort((a, b) => {
+    return (
+      Number(a.event_no ?? 0) - Number(b.event_no ?? 0) ||
+      Number(a.day_no ?? 0) - Number(b.day_no ?? 0) ||
+      new Date(a.event_date) - new Date(b.event_date)
+    );
+  });
+}
+
+function getLatestEventGroup(events) {
+  const groups = groupEventsByGroupId(events);
+
+  groups.sort((a, b) => {
+    return new Date(b.last_date) - new Date(a.last_date);
+  });
+
+  return groups[0];
+}
+
+function buildTabLabel(event, allEvents) {
+  const venues = new Set(allEvents.map((item) => item.venue).filter(Boolean));
+  const hasMultipleVenues = venues.size > 1;
+
+  const dayLabel = event.day_label || `DAY${event.day_no ?? ""}`;
+
+  if (hasMultipleVenues) {
+    const place = event.city || event.prefecture || event.venue || "";
+    return `${place}_${dayLabel}`;
+  }
+
+  return dayLabel;
+}
+
+function formatEventSummary(events) {
+  const first = events[0];
+  const last = events[events.length - 1];
+
+  const firstDate = first.event_date;
+  const lastDate = last.event_date;
+
+  const venues = [...new Set(events.map((event) => event.venue).filter(Boolean))];
+
+  const dateText =
+    firstDate === lastDate ? firstDate : `${firstDate} ～ ${lastDate}`;
+
+  const venueText =
+    venues.length === 1 ? venues[0] : `${venues[0]} ほか`;
+
+  return `${dateText} / ${venueText}`;
 }
 
 function renderSetlistTable(event) {
@@ -28,7 +93,9 @@ function renderSetlistTable(event) {
       <header class="event-detail__header">
         <h3>${escapeHtml(event.title)}</h3>
         <p class="event-meta">
-          ${escapeHtml(event.event_date)} / ${escapeHtml(event.venue)}
+          ${escapeHtml(event.day_label ?? "")}
+          ${escapeHtml(event.event_date ?? "")}
+          / ${escapeHtml(event.venue ?? "")}
         </p>
       </header>
 
@@ -37,6 +104,7 @@ function renderSetlistTable(event) {
           <thead>
             <tr>
               <th>No.</th>
+              <th>ブロック</th>
               <th>楽曲名</th>
               <th>歌唱キャラクター</th>
             </tr>
@@ -51,6 +119,7 @@ function renderSetlistTable(event) {
                 return `
                   <tr>
                     <td>${escapeHtml(item.order_no)}</td>
+                    <td>${escapeHtml(item.block_name ?? "")}</td>
                     <td>${escapeHtml(item.song_name)}</td>
                     <td>${performers}</td>
                   </tr>
@@ -62,7 +131,7 @@ function renderSetlistTable(event) {
       </div>
 
       <p class="detail-link">
-        <a href="./event.html?event_id=${encodeURIComponent(event.event_id)}">
+        <a href="./event.html?event_group_id=${encodeURIComponent(event.event_group_id || event.event_id)}">
           このイベントの詳細を見る
         </a>
       </p>
@@ -70,7 +139,7 @@ function renderSetlistTable(event) {
   `;
 }
 
-async function loadLatestEvents() {
+async function loadLatestEventGroup() {
   const tabsContainer = document.getElementById("latest-event-tabs");
   const contentContainer = document.getElementById("latest-event-content");
 
@@ -94,13 +163,16 @@ async function loadLatestEvents() {
       return;
     }
 
-    const sortedEvents = [...events].sort((a, b) => {
-      return new Date(b.event_date) - new Date(a.event_date);
-    });
+    const latestGroup = getLatestEventGroup(events);
 
-    // まずは最新2件をタブ表示対象にする
-    // DAY1/DAY2がある場合を想定して、古い順に並べ直す
-    const latestEvents = sortedEvents.slice(0, 2).reverse();
+    if (!latestGroup) {
+      contentContainer.innerHTML = `
+        <p class="error-message">最新イベントが見つかりませんでした。</p>
+      `;
+      return;
+    }
+
+    const latestEvents = latestGroup.events;
 
     function activateTab(index) {
       const selectedEvent = latestEvents[index];
@@ -112,17 +184,32 @@ async function loadLatestEvents() {
       contentContainer.innerHTML = renderSetlistTable(selectedEvent);
     }
 
+    const sectionHeading = document.querySelector(".section-heading h2");
+
+    if (sectionHeading) {
+      sectionHeading.textContent = "披露済みの最新イベント";
+    }
+
+    const summaryElement = document.createElement("p");
+    summaryElement.className = "latest-event-summary";
+    summaryElement.textContent = `${latestGroup.title} / ${formatEventSummary(latestEvents)}`;
+
+    const oldSummary = document.querySelector(".latest-event-summary");
+    if (oldSummary) {
+      oldSummary.remove();
+    }
+
+    tabsContainer.before(summaryElement);
+
     tabsContainer.innerHTML = latestEvents
       .map((event, index) => {
-        const label = formatEventLabel(event, index);
-
         return `
           <button
             type="button"
             class="tab-button ${index === 0 ? "is-active" : ""}"
             data-index="${index}"
           >
-            ${escapeHtml(label)}
+            ${escapeHtml(buildTabLabel(event, latestEvents))}
           </button>
         `;
       })
@@ -147,4 +234,4 @@ async function loadLatestEvents() {
   }
 }
 
-loadLatestEvents();
+loadLatestEventGroup();
