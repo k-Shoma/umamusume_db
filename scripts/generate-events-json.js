@@ -34,12 +34,13 @@ function normalizePerformers(value) {
 
 async function main() {
   const { data, error } = await supabase
-    .from("v_setlist_export")
+    // テスト用のビューから取得。本番時は v_setlist_export に変更する
+    .from("v_setlist_export_test")
     .select("*")
     .order("event_date", { ascending: false })
     .order("event_db_id", { ascending: true })
-    .order("order_no", { ascending: true })
-    .order("song_name", { ascending: true });
+    .order("order_no", { ascending: true });
+
   if (error) {
     throw error;
   }
@@ -47,22 +48,32 @@ async function main() {
   const eventMap = new Map();
 
   for (const row of data) {
-    const eventCode = row.event_code;
+    const eventId = row.event_id;
 
-    if (!eventMap.has(eventCode)) {
-      eventMap.set(eventCode, {
-        event_code: row.event_code,
+    if (!eventMap.has(eventId)) {
+      eventMap.set(eventId, {
+        event_id: row.event_id,
+        event_group_id: row.event_group_id,
+        event_no: row.event_no,
         title: row.event_title,
+        day_label: row.day_label,
+        day_no: row.day_no,
         event_date: row.event_date,
         venue: row.venue,
+        city: row.city,
+        prefecture: row.prefecture,
+        is_numbered: row.is_numbered,
         setlist: []
       });
     }
 
-    const event = eventMap.get(eventCode);
+    const event = eventMap.get(eventId);
 
     event.setlist.push({
       order_no: row.order_no,
+      block_name: row.block_name,
+      song_id: row.song_id,
+      is_numbered_live_candidate: row.is_numbered_live_candidate,
       song_name: row.song_name,
       performers: normalizePerformers(row.performers)
     });

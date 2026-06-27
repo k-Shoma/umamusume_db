@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ウマ娘リアルイベント セットリストDB</title>
+  <title>イベント一覧 | ウマ娘リアルイベント セットリストDB</title>
   <link rel="stylesheet" href="./css/style.css">
 </head>
 <body>
@@ -23,25 +23,22 @@
   </header>
 
   <main class="site-main">
-    <section class="hero">
-      <h2>ウマ娘リアルイベントのセットリストを探しやすく</h2>
-      <p>
-        過去のリアルイベントで披露された楽曲や出演キャラクターをまとめた非公式データベースです。
-      </p>
+    <section class="page-header">
+      <h2>イベント一覧</h2>
+      <p>過去のリアルイベントのセットリストを一覧で確認できます。</p>
     </section>
 
     <section class="section">
-      <div class="section-heading">
-        <h2>披露済みの最新イベント</h2>
-        <a href="./archive.html" class="text-link">イベント一覧を見る</a>
-      </div>
+      <a href="./prediction.html" class="prediction-card">
+        <h3>次回イベントのセトリ予想</h3>
+        <p>次回イベントで披露されそうな楽曲を予想しています。</p>
+      </a>
+    </section>
 
-      <div class="tab-buttons" id="latest-event-tabs">
-        <!-- JSでDAY1 / DAY2などのタブを生成 -->
-      </div>
-
-      <div id="latest-event-content">
-        <!-- JSで最新イベントのセットリストを表示 -->
+    <section class="section">
+      <h2>過去イベント</h2>
+      <div id="archive-event-list" class="event-grid">
+        <!-- JSでイベント一覧を生成 -->
       </div>
     </section>
   </main>
@@ -50,6 +47,6 @@
     <p>&copy; ウマ娘リアルイベント セットリストDB</p>
   </footer>
 
-  <script src="./js/index.js"></script>
+  <script src="./js/archive.js"></script>
 </body>
 </html>
