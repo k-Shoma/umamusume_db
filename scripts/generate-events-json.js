@@ -4,6 +4,7 @@ import "dotenv/config";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SECRET_KEY;
+const exportViewName = process.env.SUPABASE_EXPORT_VIEW || "v_setlist_export";
 
 if (!supabaseUrl) {
   throw new Error("SUPABASE_URL が設定されていません");
@@ -33,9 +34,11 @@ function normalizePerformers(value) {
 }
 
 async function main() {
+  console.log(`参照ビュー: ${exportViewName}`);
+
   const { data, error } = await supabase
     // テスト用のビューから取得。本番時は v_setlist_export に変更する
-    .from("v_setlist_export_test")
+    .from(exportViewName)
     .select("*")
     .order("event_date", { ascending: false })
     .order("event_db_id", { ascending: true })
