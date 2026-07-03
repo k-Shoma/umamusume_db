@@ -35,11 +35,38 @@ function groupEventsByGroupId(events) {
   });
 }
 
+function getDisplayArea(event) {
+  return event.area_label || event.city || event.prefecture || event.venue || "";
+}
+
 function sortPerformances(events) {
-  return [...events].sort((a, b) => {
+  const areaOrderMap = new Map();
+
+  const baseSortedEvents = [...events].sort((a, b) => {
     return (
-      Number(a.event_no ?? 0) - Number(b.event_no ?? 0) ||
-      Number(a.day_no ?? 0) - Number(b.day_no ?? 0) ||
+      Number(a.event_no ?? 9999) - Number(b.event_no ?? 9999) ||
+      new Date(a.event_date) - new Date(b.event_date) ||
+      Number(a.day_no ?? 9999) - Number(b.day_no ?? 9999)
+    );
+  });
+
+  for (const event of baseSortedEvents) {
+    const area = getDisplayArea(event);
+
+    if (!areaOrderMap.has(area)) {
+      areaOrderMap.set(area, areaOrderMap.size);
+    }
+  }
+
+  return [...events].sort((a, b) => {
+    const areaA = getDisplayArea(a);
+    const areaB = getDisplayArea(b);
+
+    return (
+      Number(areaOrderMap.get(areaA) ?? 9999) -
+        Number(areaOrderMap.get(areaB) ?? 9999) ||
+      Number(a.day_no ?? 9999) - Number(b.day_no ?? 9999) ||
+      Number(a.event_no ?? 9999) - Number(b.event_no ?? 9999) ||
       new Date(a.event_date) - new Date(b.event_date)
     );
   });
@@ -62,8 +89,8 @@ function buildTabLabel(event, allEvents) {
   const dayLabel = event.day_label || `DAY${event.day_no ?? ""}`;
 
   if (hasMultipleVenues) {
-    const place = event.city || event.prefecture || event.venue || "";
-    return `${place}_${dayLabel}`;
+    const area = getDisplayArea(event);
+    return `${area}_${dayLabel}`;
   }
 
   return dayLabel;

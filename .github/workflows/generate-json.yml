@@ -30,7 +30,7 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-          SUPABASE_EXPORT_VIEW: v_setlist_export_test
+          SUPABASE_EXPORT_VIEW: v_setlist_export
 
       - name: Commit generated JSON
         run: |

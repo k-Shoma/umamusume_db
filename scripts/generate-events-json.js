@@ -63,6 +63,7 @@ async function main() {
         day_no: row.day_no,
         event_date: row.event_date,
         venue: row.venue,
+        area_label: row.area_label,
         city: row.city,
         prefecture: row.prefecture,
         is_numbered: row.is_numbered,
