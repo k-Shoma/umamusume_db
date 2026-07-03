@@ -35,41 +35,103 @@ function groupEventsByGroupId(events) {
   });
 }
 
-function getDisplayArea(event) {
-  return event.area_label || event.city || event.prefecture || event.venue || "";
+function normalizeValue(value) {
+  if (value === null || value === undefined) return "";
+
+  const text = String(value).trim();
+
+  if (text === "" || text.toUpperCase() === "NULL") {
+    return "";
+  }
+
+  return text;
+}
+
+function getAreaLabel(event) {
+  return normalizeValue(event.area_label);
+}
+
+function getGeoAreaLabel(event) {
+  return (
+    normalizeValue(event.city) ||
+    normalizeValue(event.prefecture) ||
+    normalizeValue(event.venue)
+  );
+}
+
+function getTabGroupLabel(event) {
+  return getAreaLabel(event) || getGeoAreaLabel(event);
+}
+
+function toSafeNumber(value, fallback = 9999) {
+  const number = Number(value);
+  return Number.isFinite(number) ? number : fallback;
+}
+
+function toSafeTime(value) {
+  const time = new Date(value).getTime();
+  return Number.isFinite(time) ? time : 8640000000000000;
 }
 
 function sortPerformances(events) {
-  const areaOrderMap = new Map();
+  const groupOrderMap = new Map();
 
   const baseSortedEvents = [...events].sort((a, b) => {
     return (
-      Number(a.event_no ?? 9999) - Number(b.event_no ?? 9999) ||
-      new Date(a.event_date) - new Date(b.event_date) ||
-      Number(a.day_no ?? 9999) - Number(b.day_no ?? 9999)
+      toSafeNumber(a.event_no) - toSafeNumber(b.event_no) ||
+      toSafeTime(a.event_date) - toSafeTime(b.event_date) ||
+      toSafeNumber(a.day_no) - toSafeNumber(b.day_no)
     );
   });
 
   for (const event of baseSortedEvents) {
-    const area = getDisplayArea(event);
+    const groupLabel = getTabGroupLabel(event) || event.event_id || "";
 
-    if (!areaOrderMap.has(area)) {
-      areaOrderMap.set(area, areaOrderMap.size);
+    if (!groupOrderMap.has(groupLabel)) {
+      groupOrderMap.set(groupLabel, groupOrderMap.size);
     }
   }
 
   return [...events].sort((a, b) => {
-    const areaA = getDisplayArea(a);
-    const areaB = getDisplayArea(b);
+    const groupA = getTabGroupLabel(a) || a.event_id || "";
+    const groupB = getTabGroupLabel(b) || b.event_id || "";
 
     return (
-      Number(areaOrderMap.get(areaA) ?? 9999) -
-        Number(areaOrderMap.get(areaB) ?? 9999) ||
-      Number(a.day_no ?? 9999) - Number(b.day_no ?? 9999) ||
-      Number(a.event_no ?? 9999) - Number(b.event_no ?? 9999) ||
-      new Date(a.event_date) - new Date(b.event_date)
+      toSafeNumber(groupOrderMap.get(groupA)) -
+        toSafeNumber(groupOrderMap.get(groupB)) ||
+      toSafeNumber(a.day_no) - toSafeNumber(b.day_no) ||
+      toSafeNumber(a.event_no) - toSafeNumber(b.event_no) ||
+      toSafeTime(a.event_date) - toSafeTime(b.event_date)
     );
   });
+}
+
+function buildTabLabel(event, allEvents) {
+  const areaLabels = new Set(
+    allEvents
+      .map((item) => getAreaLabel(item))
+      .filter(Boolean)
+  );
+
+  const geoLabels = new Set(
+    allEvents
+      .map((item) => getGeoAreaLabel(item))
+      .filter(Boolean)
+  );
+
+  const shouldShowGroupLabel =
+    areaLabels.size > 1 || geoLabels.size > 1;
+
+  const dayLabel =
+    normalizeValue(event.day_label) ||
+    (event.day_no ? `DAY${event.day_no}` : "公演");
+
+  if (shouldShowGroupLabel) {
+    const groupLabel = getTabGroupLabel(event);
+    return `${groupLabel}_${dayLabel}`;
+  }
+
+  return dayLabel;
 }
 
 function getLatestEventGroup(events) {
@@ -82,19 +144,6 @@ function getLatestEventGroup(events) {
   return groups[0];
 }
 
-function buildTabLabel(event, allEvents) {
-  const venues = new Set(allEvents.map((item) => item.venue).filter(Boolean));
-  const hasMultipleVenues = venues.size > 1;
-
-  const dayLabel = event.day_label || `DAY${event.day_no ?? ""}`;
-
-  if (hasMultipleVenues) {
-    const area = getDisplayArea(event);
-    return `${area}_${dayLabel}`;
-  }
-
-  return dayLabel;
-}
 
 function formatEventSummary(events) {
   const first = events[0];
