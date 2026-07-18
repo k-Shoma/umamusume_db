@@ -1,10 +1,13 @@
 import { createClient } from "@supabase/supabase-js";
 import fs from "node:fs/promises";
 import "dotenv/config";
+import path from "node:path";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SECRET_KEY;
 const exportViewName = process.env.SUPABASE_EXPORT_VIEW || "v_setlist_export";
+const scheduleViewName =
+  process.env.SUPABASE_SCHEDULE_VIEW || "v_event_schedule_export";
 
 if (!supabaseUrl) {
   throw new Error("SUPABASE_URL が設定されていません");
@@ -31,6 +34,74 @@ function normalizePerformers(value) {
   }
 
   return [];
+}
+
+function normalizeTextList(value) {
+  if (!value) return [];
+
+  if (Array.isArray(value)) {
+    return value
+      .map((item) => String(item).trim())
+      .filter(Boolean);
+  }
+
+  return String(value)
+    .split(/[,、]/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+async function generateEventScheduleJson() {
+  console.log(`参照スケジュールビュー: ${scheduleViewName}`);
+
+  const { data, error } = await supabase
+    .from(scheduleViewName)
+    .select("*")
+    .order("event_date", { ascending: true })
+    .order("event_no", { ascending: true })
+    .order("day_no", { ascending: true });
+
+  if (error) {
+    throw error;
+  }
+
+  const schedules = (data ?? []).map((row) => {
+    const eventGroupId = row.event_group_id || row.event_id;
+
+    return {
+      event_id: row.event_id,
+      event_group_id: eventGroupId,
+      event_no: row.event_no,
+      title: row.event_title,
+      day_label: row.day_label,
+      day_no: row.day_no,
+      event_date: row.event_date,
+      venue: row.venue,
+      area_label: row.area_label,
+      city: row.city,
+      prefecture: row.prefecture,
+      is_numbered: row.is_numbered,
+
+      event_performers_summary: row.event_performers,
+      guest_performers_summary: row.guest_performers,
+      canceled_character_summary: row.canceled_character,
+
+      event_performers: normalizeTextList(row.event_performers),
+      guest_performers: normalizeTextList(row.guest_performers),
+      canceled_characters: normalizeTextList(row.canceled_character),
+
+      official_url: row.official_url,
+      prediction_url: row.prediction_url
+    };
+  });
+
+  const outputDir = path.join(process.cwd(), "data");
+await fs.mkdir(outputDir, { recursive: true });
+
+const outputPath = path.join(outputDir, "event-schedule.json");
+
+await fs.writeFile(outputPath, JSON.stringify(schedules, null, 2), "utf8");
+console.log(`data/event-schedule.json を生成しました: ${schedules.length}件`);
 }
 
 async function main() {
@@ -81,19 +152,21 @@ async function main() {
       song_name: row.song_name,
       performers: normalizePerformers(row.performers)
     });
+
   }
-
+  
   const events = Array.from(eventMap.values());
-
+  
   await fs.mkdir("data", { recursive: true });
-
+  
   await fs.writeFile(
     "data/events.json",
     JSON.stringify(events, null, 2),
     "utf-8"
   );
-
+  
   console.log(`data/events.json を生成しました。イベント数: ${events.length}`);
+  await generateEventScheduleJson();
 }
 
 main().catch((error) => {
